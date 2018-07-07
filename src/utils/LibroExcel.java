@@ -17,69 +17,43 @@ import org.apache.poi.ss.util.WorkbookUtil;
 public class LibroExcel {
 
 	private File file = null;
-	//private File tempFile = null;
+	private File tempFile = null;
 	private HSSFWorkbook workbook = null;
 	private HSSFSheet sheet = null;
-
-	public LibroExcel(String documentName){
-		try {
-			file = new File(documentName+".xls");
-
-			if(!file.exists()){
-				file.createNewFile();
-				workbook = new HSSFWorkbook();
-			}else
-				workbook = (HSSFWorkbook) WorkbookFactory.create(file);
-
-			if(workbook.getNumberOfSheets() == 0)
-				sheet = workbook.createSheet(WorkbookUtil.createSafeSheetName(documentName));
-			else
-				sheet = workbook.getSheetAt(0);
-
-		} catch (EncryptedDocumentException e) { e.printStackTrace();
-		} catch (InvalidFormatException e) { e.printStackTrace();
-		} catch (FileNotFoundException e) {e.printStackTrace();
-		} catch (IOException e) { e.printStackTrace();
-		}
-	}
 	
-	
-	public LibroExcel(String pathFile, String documentName){
+	public LibroExcel(String path, String documentName){
 		try {
-			this.file = new File(documentName+".xls");
-
-			if(!this.file.exists()){
-				this.file.createNewFile();
-				this.workbook = new HSSFWorkbook();
-			}else
-				this.workbook = (HSSFWorkbook) WorkbookFactory.create(this.file);
-
+			
+			File pathFile = new File(path);
+			String extention = ".xls";
+			
+			this.file = new File(pathFile,documentName+extention); //Crea el archivo temporal
+			this.tempFile = new File(pathFile,documentName+"_temp"+extention); //Crea el archivo temporal
+			
+			//Comprobacion archivo temporal
+			if(!this.tempFile.exists()){ //Si no existe un archivo temporal
+				this.tempFile.createNewFile(); //Crea archivo temporal
+			}else{
+				this.tempFile.delete();  //Elimina el archivo temporal existente
+				this.tempFile.createNewFile(); //Crea archivo temporal
+			}
+			
+			//Comprobacion archivo
+			if(!this.file.exists()){ //Si el archivo no existe o tiene peso 0 bytes
+				this.file.createNewFile(); //Crea el archivo
+				this.workbook = new HSSFWorkbook(); //Crea un nuevo workbook
+			}else{ //Si el archivo existe
+				if(this.file.length() == 0) //Si el archivo esta vacio
+					this.workbook = new HSSFWorkbook(); //Crea un nuevo workbook
+				else //Si el archivo no esta vacio
+					this.workbook = (HSSFWorkbook) WorkbookFactory.create(this.file); //Se obtiene el workbook del archivo
+			}
 			if(this.workbook.getNumberOfSheets() == 0)
 				this.sheet = this.workbook.createSheet(WorkbookUtil.createSafeSheetName(documentName));
 			else
 				this.sheet = this.workbook.getSheetAt(0);
 
-		} catch (EncryptedDocumentException e) { e.printStackTrace();
-		} catch (InvalidFormatException e) { e.printStackTrace();
-		} catch (FileNotFoundException e) {e.printStackTrace();
-		} catch (IOException e) { e.printStackTrace();
-		}
-	}
-	
-
-	public LibroExcel(File file){
-		try{
-			this.file = file;
-			if(file.length() == 0)
-				this.workbook = new HSSFWorkbook();
-			else
-				this.workbook = (HSSFWorkbook) WorkbookFactory.create(file);
-
-			if(this.workbook.getNumberOfSheets() == 0)
-				this.sheet = this.workbook.createSheet(WorkbookUtil.createSafeSheetName("hoja"));
-			else
-				this.sheet = this.workbook.getSheetAt(0);
-		} catch (EncryptedDocumentException e) { e.printStackTrace();
+			} catch (EncryptedDocumentException e) { e.printStackTrace();
 		} catch (InvalidFormatException e) { e.printStackTrace();
 		} catch (FileNotFoundException e) {e.printStackTrace();
 		} catch (IOException e) { e.printStackTrace();
@@ -91,11 +65,12 @@ public class LibroExcel {
 	 */
 	public void save(){
 		try {
-			File file = this.file;
-			HSSFWorkbook workbook = this.workbook;
-			FileOutputStream fos = new FileOutputStream(file);
+			FileOutputStream fos = new FileOutputStream(this.file);
 			workbook.write(fos);
 			fos.close();
+			
+			this.tempFile.delete();
+			
 		} catch (FileNotFoundException e) {e.printStackTrace();
 		} catch (IOException e) { e.printStackTrace();
 		}
@@ -112,6 +87,9 @@ public class LibroExcel {
 			FileOutputStream fos = new FileOutputStream(file);
 			workbook.write(fos);
 			fos.close();
+			
+			this.file.delete();
+			this.tempFile.delete();
 		} catch (FileNotFoundException e) {e.printStackTrace();
 		} catch (IOException e) { e.printStackTrace();
 		}
@@ -119,6 +97,11 @@ public class LibroExcel {
 
 	public void delete(){
 		this.file.delete();
+		this.tempFile.delete();
+		this.workbook = null;
+		this.sheet = null;
+		this.file = null;
+		this.tempFile = null;
 	}
 
 	/**
@@ -327,7 +310,6 @@ public class LibroExcel {
 		addInACell(firstEmptyRow(columnIndex), columnIndex, registro);
 	}
 
-	
 	/**
 	 * getCellValue: Obtiene el valor de una celda espefifica.
 	 * @param rowIndex
@@ -359,6 +341,7 @@ public class LibroExcel {
 	}
 	
 	//TEST
+	/*
 	public void removeRow(int rowIndex){
 		int columnIndex = 0;
 		HSSFRow row = sheet.getRow(rowIndex);
@@ -375,5 +358,5 @@ public class LibroExcel {
 			cell = row.getCell(columnIndex);
 		}
 	}
-
+	*/
 }
